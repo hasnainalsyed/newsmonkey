@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import NewsItem from './NewsItem'
 import Spinner from './Spinner';
 import PropTypes from 'prop-types'
+import InfiniteScroll from 'react-infinite-scroll-component'
 
 export class News extends Component {
 
@@ -27,21 +28,25 @@ export class News extends Component {
     this.state = {
       articles: [],
       loading: true,
-      page: 1
+      page: 1,
+      totalResults: 0
     }
     document.title = `${this.captlizeLetter(this.props.category)} - NewsMonkey`;
   }
 
   async updateNews() {
-    const url = `https://newsapi.org/v2/top-headlines?country=${this.props.country}&category=${this.props.category}&apiKey=b5a3192bd39941aebb960b27a5f8d5a0&page=${this.state.page + 1}&pageSize=${this.props.pageSize}`;
-    this.setState({ loading: true });
+    this.props.setProgress(10);
+    const url = `https://newsapi.org/v2/top-headlines?country=${this.props.country}&category=${this.props.category}&apiKey=${this.props.apiKey}&page=${this.state.page + 1}&pageSize=${this.props.pageSize}`;
     let data = await fetch(url);
+    this.props.setProgress(40);
     let parsData = await data.json();
+    this.props.setProgress(60);
     this.setState({
       articles: parsData.articles,
-      totalArticles: parsData.totalResults,
+      totalResults: parsData.totalResults,
       loading: false
     });
+    this.props.setProgress(100);
   }
 
   async componentDidMount() {
@@ -62,6 +67,19 @@ export class News extends Component {
     this.updateNews();
   }
 
+  fetchMoreData = async () => {
+    this.setState({ page: this.state.page + 1 })
+    const url = `https://newsapi.org/v2/top-headlines?country=${this.props.country}&category=${this.props.category}&apiKey=${this.props.apiKey}&page=${this.state.page + 1}&pageSize=${this.props.pageSize}`;
+    this.setState({ loading: true });
+    let data = await fetch(url);
+    let parsData = await data.json();
+    this.setState({
+      articles: this.state.articles.concat(parsData.articles),
+      totalResults: parsData.totalResults,
+      loading: false
+    });
+  };
+
   render() {
     return (
       <div className='container-fluid py-5'>
@@ -71,7 +89,13 @@ export class News extends Component {
               <h2 className="text-center">NewsMonkey - Top {this.captlizeLetter(this.props.category)} Headlines</h2>
               {this.state.loading && <Spinner />}
             </div>
-            {!this.state.loading && this.state.articles.map(element => {
+            <InfiniteScroll
+              dataLength={this.state.articles.length}
+              next={this.fetchMoreData}
+              hasMore={this.state.articles.length !== this.state.totalResults}
+              loader={<Spinner />} >
+            <div className="row">
+            {this.state.articles.map(element => {
               return (
                 <NewsItem
                   key={element.url ? element.url : ''}
@@ -84,28 +108,8 @@ export class News extends Component {
                   newsUrl={element.url ? element.url : ''} />
               );
             })}
-            <div className="col-12">
-              <nav aria-label="Page navigation example">
-                <ul className="pagination justify-content-center">
-                  <li className="page-item">
-                    <button
-                      disabled={this.state.page <= 1}
-                      className="page-link"
-                      onClick={this.handlePrevClick}>
-                      &larr; Previous
-                    </button>
-                  </li>
-                  <li className="page-item">
-                    <button
-                      disabled={this.state.page + 1 > Math.ceil(this.state.totalArticles / this.props.pageSize)}
-                      className="page-link"
-                      onClick={this.handleNextClick}>
-                      Next &rarr;
-                    </button>
-                  </li>
-                </ul>
-              </nav>
             </div>
+            </InfiniteScroll>
           </div>
         </div>
       </div>

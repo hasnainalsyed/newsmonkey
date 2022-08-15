@@ -1,0 +1,8 @@
+.infinite-scroll-component__outerdiv {
+  padding: 0;
+  margin: 0;
+}
+
+.infinite-scroll-component__outerdiv .infinite-scroll-component {
+  overflow: hidden !important;
+}
