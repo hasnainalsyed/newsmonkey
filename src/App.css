@@ -6,3 +6,7 @@
 .infinite-scroll-component__outerdiv .infinite-scroll-component {
   overflow: hidden !important;
 }
+
+.navbar {
+  z-index: 99;
+}
