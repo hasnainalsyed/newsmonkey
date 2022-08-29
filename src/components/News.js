@@ -29,11 +29,27 @@ const News = (props) => {
     props.setProgress(100);
   }
 
+  // useEffect(() => {
+  //   updateNews();
+  //   document.title = `${captlizeLetter(props.category)} - NewsMonkey`;
+  //   /* eslint-enable */
+  // }, [])
+
   useEffect(() => {
-    document.title = `${captlizeLetter(props.category)} - NewsMonkey`;
+    const updateNews = async () => {
+      props.setProgress(10);
+      const url = `https://newsapi.org/v2/top-headlines?country=${props.country}&category=${props.category}&apiKey=${props.apiKey}&page=${page}&pageSize=${props.pageSize}`;
+      let data = await fetch(url);
+      props.setProgress(40);
+      let parsData = await data.json();
+      props.setProgress(60);
+      setArticles(parsData.articles);
+      setTotalResults(parsData.totalResults);
+      setLoading(false);
+      props.setProgress(100);
+    }
     updateNews();
-    /* eslint-enable */
-  }, [])
+  }, []);
 
   const fetchMoreData = async () => {
     const url = `https://newsapi.org/v2/top-headlines?country=${props.country}&category=${props.category}&apiKey=${props.apiKey}&page=${page + 1}&pageSize=${props.pageSize}`;
